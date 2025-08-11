@@ -1,25 +1,39 @@
-export default function Home(){
+export const revalidate = 60;
+
+type Work = { company:string; role:string; period:string; descript?:string; link?:string };
+
+export default async function WorkPage(){
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL + '/rest/v1/works?select=*';
+
+  let items: Work[] = [];
+  try {
+    const res = await fetch(url, {
+      headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! },
+      next: { revalidate: 60 }
+    });
+    const data = await res.json();
+    items = Array.isArray(data) ? data : [];
+  } catch {
+    items = [];
+  }
+
   return (
     <main className="container">
-      <section className="grid md:grid-cols-2 gap-7 items-center py-16">
-        <div className="card">
-          <h1 className="text-4xl font-bold">Merhaba, ben <span style={{color:'var(--accent)'}}>Murat</span> 👋</h1>
-          <p className="text-muted mt-2">Kişisel siteme hoş geldin. Projeler, yazılar ve deneyimlerimi burada topluyorum.</p>
-          <div className="flex flex-wrap gap-2 mt-4 text-sm">
-            <span className="badge">Satış & İş Geliştirme</span>
-            <span className="badge">Proje Yönetimi</span>
-            <span className="badge">Robotik / Otomasyon</span>
+      <h1 className="text-3xl font-bold my-6">Yaptığım İşler</h1>
+      {items.length === 0 && <div className="text-muted">Henüz iş kaydı yok.</div>}
+      <div className="grid md:grid-cols-3 gap-4">
+        {items.map((w,i)=>(
+          <div key={i} className="card">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">{w.company}</h3>
+              <span className="text-xs text-muted">{w.period}</span>
+            </div>
+            <p className="text-muted"><strong>{w.role}</strong></p>
+            {w.descript && <p className="text-muted">{w.descript}</p>}
+            {w.link && <a href={w.link} target="_blank" rel="noopener" className="text-sm" style={{color:'var(--accent)'}}>Detay</a>}
           </div>
-          <div className="flex gap-3 mt-4">
-            <a className="px-4 py-2 rounded-2xl bg-[var(--accent)] text-slate-900 font-bold" href="/contact">Benimle iletişime geç</a>
-            <a className="px-4 py-2 rounded-2xl border border-white/20" href="/timeline">Zaman Çizelgesi</a>
-          </div>
-        </div>
-        <div className="card">
-          <h2 className="text-2xl font-semibold">Öne çıkanlar</h2>
-          <ul className="mt-2 list-disc pl-5 text-muted"><li>🔧 Başarı 1</li><li>🤝 Başarı 2</li><li>🚀 Başarı 3</li></ul>
-        </div>
-      </section>
+        ))}
+      </div>
     </main>
-  )
+  );
 }
